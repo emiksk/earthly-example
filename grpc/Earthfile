@@ -1,0 +1,75 @@
+VERSION 0.6
+FROM golang:1.17-buster
+WORKDIR /work
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Protbufツールのインストールとスタブコードの生成
+proto-go:
+    # protoc のインストール
+    RUN apt-get update && apt-get install -y wget unzip
+    ARG TARGETARCH
+    ARG PROTOC_VERSION=3.17.3
+    RUN \
+      if [ "$TARGETARCH" = "amd64" ]; then \
+        wget -O protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/protoc-$PROTOC_VERSION-linux-x86_64.zip ;\
+      else \
+        wget -O protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/protoc-$PROTOC_VERSION-linux-aarch_64.zip ;\
+      fi
+    RUN unzip protoc.zip -d /usr/local/
+
+    # protoc-gen-go と protoc-gen-go-grpc のインストール
+    ARG PROTOC_GEN_GO_VERSION=1.26.0
+    RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v$PROTOC_GEN_GO_VERSION
+    ARG PROTOC_GEN_GO_GRPC_VERSION=1.1.0
+    RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v$PROTOC_GEN_GO_GRPC_VERSION
+
+    # スタブコードの生成
+    COPY example.proto /work
+    RUN protoc --proto_path=/work --go_out=/work --go-grpc_out=/work /work/example.proto
+    SAVE ARTIFACT /work/pb /pb AS LOCAL ./
+
+# 依存ライブラリのダウンロード
+deps:
+    COPY --dir +proto-go/pb ./
+    COPY go.mod go.sum ./
+    RUN go mod download
+    SAVE ARTIFACT go.mod AS LOCAL go.mod
+    SAVE ARTIFACT go.sum AS LOCAL go.sum
+
+# 実行ファイルの生成
+build:
+    FROM +deps
+    COPY . .
+    RUN go build -o /go/server main.go
+    SAVE ARTIFACT /go/server /server AS LOCAL ./
+
+# Dockerイメージの生成
+docker:
+    FROM debian:buster
+    WORKDIR work
+    COPY +build/server .
+    ENTRYPOINT ["/work/server"]
+    ARG DOCKER_TAG=latest
+    SAVE IMAGE --push ghcr.io/emiksk/earthly-example:$DOCKER_TAG
+
+# Lintツールの実行
+lint:
+    FROM +deps
+    ARG STATICCHECK_VERSION=2021.1.2
+    RUN go install honnef.co/go/tools/cmd/staticcheck@$STATICCHECK_VERSION
+    COPY . .
+    RUN staticcheck ./...
+    RUN go vet ./...
+
+# ユニットテストの実行
+test:
+    FROM +deps
+    COPY . .
+    RUN go test ./...
+
+all:
+    BUILD +proto-go
+    BUILD +lint
+    BUILD +test
+    BUILD +build
+    BUILD +docker

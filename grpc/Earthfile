@@ -35,6 +35,7 @@ deps:
     RUN go mod download
     SAVE ARTIFACT go.mod AS LOCAL go.mod
     SAVE ARTIFACT go.sum AS LOCAL go.sum
+    SAVE IMAGE --cache-hint
 
 # 実行ファイルの生成
 build:

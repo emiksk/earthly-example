@@ -18,7 +18,7 @@ jobs:
           version: v0.6.20
       - name: Run lint
         working-directory: grpc
-        run: earthly --ci +lint
+        run: earthly --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +lint
 
   test:
     name: Unit test
@@ -31,7 +31,7 @@ jobs:
           version: v0.6.20
       - name: Run unit test
         working-directory: grpc
-        run: earthly --ci +test
+        run: earthly --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +test
 
   docker:
     name: Build and push docker image
@@ -52,4 +52,4 @@ jobs:
         working-directory: grpc
         run: |
           TAG="$(date +%Y%m%d-%H%M)-$(git rev-parse --short=10 HEAD)"
-          earthly --ci --push +docker --DOCKER_TAG=$TAG
+          earthly --ci --push --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +docker --DOCKER_TAG=$TAG

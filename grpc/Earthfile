@@ -27,6 +27,7 @@ proto-go:
     COPY example.proto /work
     RUN protoc --proto_path=/work --go_out=/work --go-grpc_out=/work /work/example.proto
     SAVE ARTIFACT /work/pb /pb AS LOCAL ./
+    SAVE IMAGE --cache-hint
 
 # 依存ライブラリのダウンロード
 deps:

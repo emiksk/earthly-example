@@ -15,7 +15,7 @@ jobs:
       - name: Setup Earthly
         uses: earthly/actions-setup@v1.0.1
         with:
-          version: 0.6.1
+          version: v0.6.20
       - name: Run lint
         working-directory: grpc
         run: earthly --ci +lint
@@ -28,7 +28,7 @@ jobs:
       - name: Setup Earthly
         uses: earthly/actions-setup@v1.0.1
         with:
-          version: 0.6.1
+          version: v0.6.20
       - name: Run unit test
         working-directory: grpc
         run: earthly --ci +test
@@ -41,7 +41,7 @@ jobs:
       - name: Setup Earthly
         uses: earthly/actions-setup@v1.0.1
         with:
-          version: 0.6.1
+          version: v0.6.20
       - name: Login to ghcr.io
         uses: docker/login-action@v2.0.0
         with:

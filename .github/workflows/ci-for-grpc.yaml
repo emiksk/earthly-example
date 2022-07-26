@@ -52,4 +52,4 @@ jobs:
         working-directory: grpc
         run: |
           TAG="$(date +%Y%m%d-%H%M)-$(git rev-parse --short=10 HEAD)"
-          earthly --ci --push +docker --build-arg DOCKER_TAG=$TAG
+          earthly --ci --push +docker --DOCKER_TAG=$TAG

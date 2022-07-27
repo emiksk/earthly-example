@@ -1,4 +1,4 @@
-VERSION 0.6
+VERSION --use-cache-command 0.6
 FROM golang:1.17-buster
 WORKDIR /work
 ENV DEBIAN_FRONTEND=noninteractive
@@ -31,12 +31,22 @@ proto-go:
 
 # 依存ライブラリのダウンロード
 deps:
+    ARG USE_CACHE_COMMAND
+    IF [ -n "$USE_CACHE_COMMAND" ]
+        CACHE ./go/pkg/mod
+        RUN cp -r ./go/pkg/mod $GOPATH/pkg/
+    END
+
     COPY --dir +proto-go/pb ./
     COPY go.mod go.sum ./
     RUN go mod download
     SAVE ARTIFACT go.mod AS LOCAL go.mod
     SAVE ARTIFACT go.sum AS LOCAL go.sum
-    SAVE IMAGE --cache-hint
+
+    IF [ -n "$USE_CACHE_COMMAND" ]
+        CACHE ./go/pkg/mod
+        SAVE ARTIFACT $GOPATH/pkg/mod AS LOCAL ./go/pkg/mod
+    END
 
 # 実行ファイルの生成
 build:

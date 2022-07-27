@@ -63,6 +63,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Execute +deps
+        working-directory: grpc
+        run: earthly --ci --output --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +deps --USE_CACHE_COMMAND=true
       - name: Build and push docker image
         working-directory: grpc
         run: |

@@ -35,6 +35,7 @@ jobs:
 
   docker:
     name: Build and push docker image
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -48,8 +49,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push docker image
+      - name: Build and push docker image as latest
         working-directory: grpc
         run: |
-          TAG="$(date +%Y%m%d-%H%M)-$(git rev-parse --short=10 HEAD)"
-          earthly --ci --push --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +docker
+          TAG=$(date +%Y%m%d-%H%M)-$(git rev-parse --short=10 HEAD)
+          earthly --push --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +docker --DOCKER_TAG=$TAG

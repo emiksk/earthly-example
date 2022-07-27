@@ -26,16 +26,17 @@ proto-go:
     # スタブコードの生成
     COPY example.proto /work
     RUN protoc --proto_path=/work --go_out=/work --go-grpc_out=/work /work/example.proto
-    SAVE ARTIFACT /work/pb /pb AS LOCAL ./
+    SAVE ARTIFACT /work/pb AS LOCAL ./pb
     SAVE IMAGE --cache-hint
 
 # 依存ライブラリのダウンロード
 deps:
-    COPY --dir +proto-go/pb ./
+    FROM +proto-go
     COPY go.mod go.sum ./
     RUN go mod download
     SAVE ARTIFACT go.mod AS LOCAL go.mod
     SAVE ARTIFACT go.sum AS LOCAL go.sum
+    SAVE IMAGE --cache-hint
 
 # 実行ファイルの生成
 build:
@@ -43,6 +44,7 @@ build:
     COPY . .
     RUN go build -o /go/server main.go
     SAVE ARTIFACT /go/server /server AS LOCAL ./
+    SAVE IMAGE --cache-hint
 
 # Dockerイメージの生成
 docker:

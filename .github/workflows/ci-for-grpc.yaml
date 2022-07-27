@@ -16,14 +16,9 @@ jobs:
         uses: earthly/actions-setup@v1.0.1
         with:
           version: v0.6.20
-      - name: Use Cache
-        uses: actions/cache@preview
-        with:
-          path: ./grpc/go/pkg/mod
-          key: go-${{ hashFiles('grpc/go.sum') }}
       - name: Run lint
         working-directory: grpc
-        run: earthly --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +lint --USE_CACHE_COMMAND=true
+        run: earthly --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +lint
 
   test:
     name: Unit test
@@ -34,14 +29,9 @@ jobs:
         uses: earthly/actions-setup@v1.0.1
         with:
           version: v0.6.20
-      - name: Use Cache
-        uses: actions/cache@preview
-        with:
-          path: ./grpc/go/pkg/mod
-          key: go-${{ hashFiles('grpc/go.sum') }}
       - name: Run unit test
         working-directory: grpc
-        run: earthly --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +test --USE_CACHE_COMMAND=true
+        run: earthly --ci --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +test
 
   docker:
     name: Build and push docker image
@@ -52,22 +42,14 @@ jobs:
         uses: earthly/actions-setup@v1.0.1
         with:
           version: v0.6.20
-      - name: Use Cache
-        uses: actions/cache@preview
-        with:
-          path: ./grpc/go/pkg/mod
-          key: go-${{ hashFiles('grpc/go.sum') }}
       - name: Login to ghcr.io
         uses: docker/login-action@v2.0.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Execute +deps
-        working-directory: grpc
-        run: earthly --ci --output --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +deps --USE_CACHE_COMMAND=true
       - name: Build and push docker image
         working-directory: grpc
         run: |
           TAG="$(date +%Y%m%d-%H%M)-$(git rev-parse --short=10 HEAD)"
-          earthly --ci --push --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +docker --USE_CACHE_COMMAND=true
+          earthly --ci --push --remote-cache=ghcr.io/emiksk/earthly-example-cache:cache +docker
